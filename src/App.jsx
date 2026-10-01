@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDownUp, Box, Check, ChevronDown, CircleHelp, LogOut, PackagePlus, Pencil, Plus, Search, ShieldCheck, Trash2, X } from 'lucide-react';
+import { AlertCircle, ArrowDownUp, Box, Check, ChevronDown, CircleHelp, Eye, EyeOff, LogOut, PackagePlus, Pencil, Plus, Search, ShieldCheck, Trash2, X } from 'lucide-react';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
 const TOKEN_KEY = 'fieldnotes.accessToken';
@@ -52,6 +52,7 @@ function AuthScreen({ onLogin }) {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
@@ -91,7 +92,7 @@ function AuthScreen({ onLogin }) {
           <form onSubmit={submit} className="auth-form">
             {mode === 'register' && <label htmlFor="username">Username<input id="username" name="username" autoComplete="username" minLength="3" maxLength="100" required value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} placeholder="How should we call you?" /></label>}
             <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@company.com" /></label>
-            <label htmlFor="password">Password<input id="password" name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength="8" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" /></label>
+            <label htmlFor="password">Password<div className="password-control"><input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength="8" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" /><button type="button" className="password-toggle" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary auth-submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}<span aria-hidden="true">↗</span></button>
           </form>
@@ -136,6 +137,26 @@ function ProductDialog({ product, onClose, onSave }) {
   </div>;
 }
 
+function DeleteDialog({ product, onCancel, onConfirm, busy }) {
+  return <div className="dialog-backdrop" role="presentation" onMouseDown={event => event.target === event.currentTarget && !busy && onCancel()}>
+    <section className="dialog delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-description">
+      <div className="delete-emblem"><Trash2 size={21} /></div>
+      <p className="eyebrow">ONE LAST CHECK</p>
+      <h2 id="delete-title">Remove this product?</h2>
+      <p id="delete-description">“{product.product_name}” will be removed from your inventory.</p>
+      <div className="dialog-actions"><button type="button" className="button button-quiet" disabled={busy} onClick={onCancel}>Keep it</button><button type="button" className="button button-danger" disabled={busy} onClick={onConfirm}>{busy ? 'Removing…' : 'Remove product'}</button></div>
+    </section>
+  </div>;
+}
+
+function Toast({ toast, onDismiss }) {
+  if (!toast) return null;
+  const Icon = toast.type === 'error' ? AlertCircle : Check;
+  return <div className={`toast toast-${toast.type}`} role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'}>
+    <span className="toast-icon"><Icon size={16} /></span><span>{toast.message}</span><button type="button" aria-label="Dismiss notification" onClick={onDismiss}><X size={15} /></button>
+  </div>;
+}
+
 function Dashboard({ user, token, onLogout }) {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
@@ -144,6 +165,9 @@ function Dashboard({ user, token, onLogout }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [sortLow, setSortLow] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState(null);
 
   async function loadProducts() {
     setError('');
@@ -160,6 +184,11 @@ function Dashboard({ user, token, onLogout }) {
 
   useEffect(() => { loadProducts(); }, []);
   useEffect(() => {
+    if (!toast) return undefined;
+    const timer = window.setTimeout(() => setToast(null), 3600);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+  useEffect(() => {
     function focusSearch(event) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
@@ -175,15 +204,21 @@ function Dashboard({ user, token, onLogout }) {
     const path = editing ? `/api/products/${dialogProduct.id}` : '/api/products';
     await request(path, { token, method: editing ? 'PUT' : 'POST', body: JSON.stringify(fields) });
     await loadProducts();
+    setToast({ type: 'success', message: editing ? 'Product details saved.' : 'Product added to your inventory.' });
   }
 
   async function deleteProduct(product) {
-    if (!window.confirm(`Delete “${product.product_name}”? This cannot be undone.`)) return;
+    setDeleting(true);
     try {
       await request(`/api/products/${product.id}`, { token, method: 'DELETE' });
       setProducts(current => current.filter(item => item.id !== product.id));
+      setPendingDelete(null);
+      setToast({ type: 'success', message: 'Product removed from your inventory.' });
     } catch (err) {
       setError(err.message);
+      setToast({ type: 'error', message: err.message });
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -200,13 +235,15 @@ function Dashboard({ user, token, onLogout }) {
         <div className="table-toolbar"><label className="search-box"><Search size={16} /><input ref={searchInput} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products" aria-label="Search products" /><kbd>⌘ K</kbd></label><button className={`filter-button ${sortLow ? 'filter-active' : ''}`} onClick={() => setSortLow(!sortLow)}><ArrowDownUp size={15} /> Stock {sortLow ? 'low to high' : 'high to low'}</button></div>
         {error && <div className="notice-error" role="alert">{error}<button onClick={() => setError('')} aria-label="Dismiss"><X size={16} /></button></div>}
         <div className="table-wrap"><table><thead><tr><th>PRODUCT</th><th>DESCRIPTION</th><th>PRICE</th><th>IN STOCK</th><th>ADDED</th><th><span className="sr-only">ACTIONS</span></th></tr></thead><tbody>
-          {loading ? <tr><td colSpan="6" className="empty-state"><span className="loading-indicator" /> Loading your catalog…</td></tr> : filtered.length === 0 ? <tr><td colSpan="6" className="empty-state"><span className="empty-icon"><Box size={20} /></span><strong>{search ? 'No matching products' : 'Your catalog is ready'}</strong><span>{search ? 'Try another search term.' : 'Add your first product to start tracking inventory.'}</span>{!search && <button className="button button-secondary" onClick={() => setDialogProduct(null)}><Plus size={15} /> Add first product</button>}</td></tr> : filtered.map(product => <tr key={product.id}><td><div className="product-cell"><span className="product-thumbnail"><Box size={17} /></span><strong>{product.product_name}</strong></div></td><td className="description-cell">{product.description || <span className="muted">No description</span>}</td><td className="price-cell">₱{Number(product.price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td><span className={`stock-pill ${Number(product.quantity) < 5 ? 'stock-low' : 'stock-ok'}`}><span />{product.quantity} units</span></td><td className="date-cell">{new Date(`${product.created_at.replace(' ', 'T')}Z`).toLocaleDateString('en-PH', { day: '2-digit', month: 'short', year: 'numeric' })}</td><td><div className="row-actions"><button className="icon-button" aria-label={`Edit ${product.product_name}`} title="Edit product" onClick={() => setDialogProduct(product)}><Pencil size={15} /></button><button className="icon-button delete-action" aria-label={`Delete ${product.product_name}`} title="Delete product" onClick={() => deleteProduct(product)}><Trash2 size={15} /></button></div></td></tr>)}
+          {loading ? <tr><td colSpan="6" className="empty-state"><span className="loading-indicator" /> Loading your catalog…</td></tr> : filtered.length === 0 ? <tr><td colSpan="6" className="empty-state"><span className="empty-icon"><Box size={20} /></span><strong>{search ? 'No matching products' : 'Your catalog is ready'}</strong><span>{search ? 'Try another search term.' : 'Add your first product to start tracking inventory.'}</span>{!search && <button className="button button-secondary" onClick={() => setDialogProduct(null)}><Plus size={15} /> Add first product</button>}</td></tr> : filtered.map(product => <tr key={product.id}><td><div className="product-cell"><span className="product-thumbnail"><Box size={17} /></span><strong>{product.product_name}</strong></div></td><td className="description-cell">{product.description || <span className="muted">No description</span>}</td><td className="price-cell">₱{Number(product.price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td><span className={`stock-pill ${Number(product.quantity) < 5 ? 'stock-low' : 'stock-ok'}`}><span />{product.quantity} units</span></td><td className="date-cell">{new Date(`${product.created_at.replace(' ', 'T')}Z`).toLocaleDateString('en-PH', { day: '2-digit', month: 'short', year: 'numeric' })}</td><td><div className="row-actions"><button className="icon-button" aria-label={`Edit ${product.product_name}`} title="Edit product" onClick={() => setDialogProduct(product)}><Pencil size={15} /></button><button className="icon-button delete-action" aria-label={`Delete ${product.product_name}`} title="Delete product" onClick={() => setPendingDelete(product)}><Trash2 size={15} /></button></div></td></tr>)}
         </tbody></table></div>
         <div className="table-footer"><span><Check size={14} /> All changes save to your workspace</span><span>Showing {filtered.length} of {products.length}</span></div>
       </section>
       <footer className="page-footer"><span>FIELDNOTES INVENTORY SYSTEM</span><span>BUILT FOR THE EVERYDAY WORK</span></footer>
     </main>
     {dialogProduct !== undefined && <ProductDialog product={dialogProduct || undefined} onClose={() => setDialogProduct(undefined)} onSave={saveProduct} />}
+    {pendingDelete && <DeleteDialog product={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={() => deleteProduct(pendingDelete)} busy={deleting} />}
+    <Toast toast={toast} onDismiss={() => setToast(null)} />
   </div>;
 }
 
