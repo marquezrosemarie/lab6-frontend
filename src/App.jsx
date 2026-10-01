@@ -89,9 +89,9 @@ function AuthScreen({ onLogin }) {
           <h2>{mode === 'login' ? 'Sign in to continue' : 'Create your account'}</h2>
           <p className="form-subtitle">{mode === 'login' ? 'Your inventory is right where you left it.' : 'Set up a workspace to manage your products.'}</p>
           <form onSubmit={submit} className="auth-form">
-            {mode === 'register' && <label>Username<input autoComplete="username" minLength="3" maxLength="100" required value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} placeholder="How should we call you?" /></label>}
-            <label>Email address<input type="email" autoComplete="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@company.com" /></label>
-            <label>Password<input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength="8" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" /></label>
+            {mode === 'register' && <label htmlFor="username">Username<input id="username" name="username" autoComplete="username" minLength="3" maxLength="100" required value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} placeholder="How should we call you?" /></label>}
+            <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@company.com" /></label>
+            <label htmlFor="password">Password<input id="password" name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength="8" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" /></label>
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary auth-submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}<span aria-hidden="true">↗</span></button>
           </form>
@@ -126,9 +126,9 @@ function ProductDialog({ product, onClose, onSave }) {
     <section className="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
       <div className="dialog-heading"><div><p className="eyebrow">CATALOG ENTRY</p><h2 id="dialog-title">{product ? 'Edit product' : 'Add a product'}</h2></div><button className="icon-button" aria-label="Close" onClick={onClose}><X size={18} /></button></div>
       <form className="product-form" onSubmit={submit}>
-        <label>Product name<input autoFocus required maxLength="100" value={form.product_name} onChange={e => setForm({ ...form, product_name: e.target.value })} placeholder="e.g. Ceramic pour-over set" /></label>
-        <label>Description<textarea rows="3" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="A short note about this item" /></label>
-        <div className="form-grid"><label>Price<input type="number" min="0" max="99999999.99" step="0.01" required value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="0.00" /></label><label>Quantity<input type="number" min="0" step="1" required value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder="0" /></label></div>
+        <label htmlFor="product-name">Product name<input id="product-name" name="product_name" autoFocus required maxLength="100" value={form.product_name} onChange={e => setForm({ ...form, product_name: e.target.value })} placeholder="e.g. Ceramic pour-over set" /></label>
+        <label htmlFor="description">Description<textarea id="description" name="description" rows="3" value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="A short note about this item" /></label>
+        <div className="form-grid"><label htmlFor="price">Price<input id="price" name="price" type="number" min="0" max="99999999.99" step="0.01" required value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="0.00" /></label><label htmlFor="quantity">Quantity<input id="quantity" name="quantity" type="number" min="0" step="1" required value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder="0" /></label></div>
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="dialog-actions"><button type="button" className="button button-quiet" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={busy}>{busy ? 'Saving…' : product ? 'Save changes' : 'Add product'}</button></div>
       </form>
