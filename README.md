@@ -1,6 +1,6 @@
-# Lab 6 React Frontend
+# RoseStock Frontend
 
-React/Vite frontend for the LavaLust product API. It is a separate project from the backend and only communicates with the API over HTTP.
+React/Vite frontend for the LavaLust product API. It is a separate project from the backend and only communicates with the API over HTTP. Put the site logo in `public/` and reference it from the app with an absolute path such as `/logo.png`.
 
 ## Run locally
 

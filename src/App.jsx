@@ -74,7 +74,7 @@ function AuthScreen({ onLogin }) {
   return (
     <main className="auth-shell">
       <section className="auth-story">
-        <div className="brand"><span className="brand-mark"><Box size={18} /></span> FIELDNOTES <span className="brand-divider">/</span> INVENTORY</div>
+        <div className="brand"><span className="brand-mark"><Box size={18} /></span> ROSESTOCK <span className="brand-divider">/</span> INVENTORY</div>
         <div className="story-copy">
           <p className="eyebrow"><span className="status-dot" /> SMALL BUSINESS TOOLKIT</p>
           <h1>Keep the good<br />things <em>moving.</em></h1>
@@ -96,7 +96,7 @@ function AuthScreen({ onLogin }) {
             {error && <p className="form-error" role="alert">{error}</p>}
             <button className="button button-primary auth-submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}<span aria-hidden="true">↗</span></button>
           </form>
-          <p className="auth-switch">{mode === 'login' ? 'New to Fieldnotes?' : 'Already have an account?'} <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>{mode === 'login' ? 'Create account' : 'Sign in'}</button></p>
+          <p className="auth-switch">{mode === 'login' ? 'New to RoseStock?' : 'Already have an account?'} <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>{mode === 'login' ? 'Create account' : 'Sign in'}</button></p>
         </div>
         <p className="auth-footnote">By continuing, you agree to keep your workspace credentials private.</p>
       </section>
@@ -227,7 +227,7 @@ function Dashboard({ user, token, onLogout }) {
   const lowStock = products.filter(item => Number(item.quantity) < 5).length;
 
   return <div className="app-shell">
-    <aside className="sidebar"><a className="brand sidebar-brand" href="#top"><span className="brand-mark"><Box size={18} /></span> FIELDNOTES</a><div className="workspace-switch"><span className="workspace-avatar">{(user.username || 'U').slice(0, 1).toUpperCase()}</span><span><strong>{user.username}</strong><small>My workspace</small></span><ChevronDown size={15} /></div><p className="nav-caption">WORKSPACE</p><a href="#inventory" className="nav-item nav-item-active"><Box size={17} /> Products <span>{products.length}</span></a><div className="sidebar-bottom"><div className="help-note"><CircleHelp size={17} /><span><strong>Need a hand?</strong><small>Inventory help</small></span><ChevronDown size={14} /></div><button className="nav-item logout-button" onClick={onLogout}><LogOut size={17} /> Sign out</button><div className="sidebar-meta">FIELDNOTES <span>·</span> INVENTORY TOOL</div></div></aside>
+    <aside className="sidebar"><a className="brand sidebar-brand" href="#top"><span className="brand-mark"><Box size={18} /></span> ROSESTOCK</a><div className="workspace-switch"><span className="workspace-avatar">{(user.username || 'U').slice(0, 1).toUpperCase()}</span><span><strong>{user.username}</strong><small>My workspace</small></span><ChevronDown size={15} /></div><p className="nav-caption">WORKSPACE</p><a href="#inventory" className="nav-item nav-item-active"><Box size={17} /> Products <span>{products.length}</span></a><div className="sidebar-bottom"><div className="help-note"><CircleHelp size={17} /><span><strong>Need a hand?</strong><small>Inventory help</small></span><ChevronDown size={14} /></div><button className="nav-item logout-button" onClick={onLogout}><LogOut size={17} /> Sign out</button><div className="sidebar-meta">ROSESTOCK <span>·</span> INVENTORY TOOL</div></div></aside>
     <main className="main-content" id="top"><header className="topbar"><div className="breadcrumb">Workspace <span>/</span> <strong>Products</strong></div><div className="topbar-right"><span className="api-status"><span /> CONNECTED</span><span className="topbar-date">CATALOG / 01</span><button className="mobile-logout icon-button" aria-label="Sign out" onClick={onLogout}><LogOut size={18} /></button></div></header>
       <section className="page-heading" id="inventory"><div><p className="eyebrow">YOUR CATALOG <span className="heading-rule" /></p><h1>Products <span>{String(products.length).padStart(2, '0')}</span></h1><p className="page-subtitle">A thoughtful view of everything in your inventory.</p></div><button className="button button-primary add-button" onClick={() => setDialogProduct(null)}><Plus size={17} /> Add product</button></section>
       <section className="metrics" aria-label="Inventory summary"><div className="metric"><span className="metric-label">TOTAL ITEMS</span><div>{products.length}<span className="metric-icon mint"><Box size={17} /></span></div><small>Distinct products in catalog</small></div><div className="metric"><span className="metric-label">INVENTORY VALUE</span><div>₱{inventoryValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="metric-icon peach">↗</span></div><small>Based on current quantity</small></div><div className="metric"><span className="metric-label">LOW STOCK</span><div>{String(lowStock).padStart(2, '0')}<span className="metric-icon yellow"><PackagePlus size={17} /></span></div><small>Items with fewer than 5 units</small></div></section>
@@ -239,7 +239,7 @@ function Dashboard({ user, token, onLogout }) {
         </tbody></table></div>
         <div className="table-footer"><span><Check size={14} /> All changes save to your workspace</span><span>Showing {filtered.length} of {products.length}</span></div>
       </section>
-      <footer className="page-footer"><span>FIELDNOTES INVENTORY SYSTEM</span><span>BUILT FOR THE EVERYDAY WORK</span></footer>
+      <footer className="page-footer"><span>ROSESTOCK INVENTORY SYSTEM</span><span>BUILT FOR THE EVERYDAY WORK</span></footer>
     </main>
     {dialogProduct !== undefined && <ProductDialog product={dialogProduct || undefined} onClose={() => setDialogProduct(undefined)} onSave={saveProduct} />}
     {pendingDelete && <DeleteDialog product={pendingDelete} onCancel={() => setPendingDelete(null)} onConfirm={() => deleteProduct(pendingDelete)} busy={deleting} />}

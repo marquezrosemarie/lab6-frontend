@@ -1,0 +1,1 @@
+Place the site logo and other static assets in this folder. Reference them from the app with absolute paths, for example `/logo.png`.
